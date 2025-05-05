@@ -61,17 +61,27 @@ public class Scanner {
             case '+': addToken(PLUS);                                               break;
             case '-': addToken(MINUS);                                              break;
             case ';': addToken(SEMICOLON);                                          break;
-            case '*': addToken(STAR);                                               break;
             case '!': addToken(match('=') ? BANG_EQUAL    : BANG);         break;
             case '=': addToken(match('=') ? EQUAL_EQUAL   : EQUAL);        break;
             case '<': addToken(match('=') ? LESS_EQUAL    : LESS);         break;
             case '>': addToken(match('=') ? GREATER_EQUAL : GREATER);      break;
+            case '*':
+                // Handle closing block comments
+                if (match('/')) {
+                    if (atEOF()) break;
+                    nextChar();
+                } else {
+                    addToken(STAR);
+                }
+                break;
             case '/':
-                // Handle line comments
+                // Handle line comments - move to EOL and break
                 if (match('/')) {
                     while (peek() != '\n' && !atEOF()) nextChar();
+                    break;
+                }
                 // Handle block comments
-                } else if (match('*')) {
+                if (match('*')) {
                     while (!source.startsWith("*/", current)) {
                         if (atEOF()) {
                             Fojaccia.error(line, "Unterminated block comment before EOF");
@@ -86,12 +96,12 @@ public class Scanner {
                 break;
             case ' ', '\r', '\t': break;
             case '\n': line++;    break;
-            case '"': string();   break;
+            case '"': parseToken(STRING);   break;
             default:
                 if (isDigit(c)) {
-                    number();
+                    parseToken(NUMBER);
                 } else if (isAlpha(c)) {
-                    identifier();
+                    parseToken(IDENTIFIER);
                 } else {
                     Fojaccia.error(line, "Unexpected character");
                 }
@@ -99,12 +109,46 @@ public class Scanner {
         }
     }
 
-    private void identifier() {
-        while (isAlphaNumeric(peek())) nextChar();
-        TokenType type = keywords.get(source.substring(start, current));
-        if (type == NULL) type = IDENTIFIER;
+    private void parseToken(TokenType type) {
+        switch (type) {
+            case NUMBER:
+                while (isDigit(peek())) nextChar();
+                if (peek() == '.' && isDigit(peekNext())) {
+                    nextChar();
 
-        addToken(type);
+                    while (isDigit(peek())) nextChar();
+                }
+
+                addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
+                break;
+
+            case STRING:
+                while (peek() != '"' && !atEOF()) {
+                    if (peek() == '\n') line++;
+                    nextChar();
+                }
+                if (atEOF()) {
+                    Fojaccia.error(line, "Unterminated string before EOF");
+                    break;
+                }
+
+                // Handle the closing double-quote
+                nextChar();
+                // Trim off the quotes
+                String value = source.substring(start + 1, current - 1);
+                addToken(STRING, value);
+                break;
+
+            case IDENTIFIER:
+                while (isAlphaNumeric(peek())) nextChar();
+                type = keywords.get(source.substring(start, current)) == null
+                    ? IDENTIFIER
+                    : keywords.get(source.substring(start, current));
+                addToken(type);
+                break;
+            default:
+                break;
+        }
     }
 
     private boolean isAlphaNumeric(char c) {
@@ -117,38 +161,8 @@ public class Scanner {
                 c == '_';
     }
 
-    // This feels like a mess?
-    private void number() {
-        while (isDigit(peek())) nextChar();
-        if (peek() == '.' && isDigit(peekNext())) {
-            nextChar();
-
-            while (isDigit(peek())) nextChar();
-        }
-        addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
-    }
-
     private boolean isDigit(char c) {
         return c >= '0' && c <= '9';
-    }
-
-    private void string() {
-        while (peek() != '"' && !atEOF()) {
-            if (peek() == '\n') line++;
-            nextChar();
-        }
-
-        if (atEOF()) {
-            Fojaccia.error(line, "Unterminated string before EOF");
-            return;
-        }
-
-        // Handle the closing double-quote
-        nextChar();
-
-        // Trim off the quotes
-        String value = source.substring(start + 1, current - 1);
-        addToken(STRING, value);
     }
 
     private void addToken(TokenType type) {
