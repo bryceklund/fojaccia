@@ -1,1 +1,1 @@
-Interpreter written in Java, by way of Robert Nystrom's Crafting Interpreters
+Interpreter for the Java implementation of the Focaccia language (Fojaccia), by way of Robert Nystrom's Crafting Interpreters
