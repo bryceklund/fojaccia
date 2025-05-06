@@ -8,6 +8,8 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.List;
 
+import static fojaccia.TokenType.EOF;
+
 /**
  * Note: Exit codes are specified based on the Unix sysexits.h header:
  *  <a href="https://man.freebsd.org/cgi/man.cgi?query=sysexits&manpath=FreeBSD+4.3-RELEASE" />
@@ -50,18 +52,26 @@ public class Fojaccia {
     private static void run(String input) {
         Scanner scanner = new Scanner(input);
         List<Token> tokens = scanner.scanTokens();
+        Parser parser = new Parser(tokens);
+        Expression expression = parser.parse();
+        if (hadError) return;
+        System.out.println(new AstPrinter().print(expression));
+    }
 
-        for (Token token : tokens) {
-            System.out.println(token);
-        }
+    private static void report(int line, String where, String message) {
+        System.err.println("[line " + line + "] Error " + where + ": " + message);
+        hadError = true;
     }
 
     static void error(int line, String message) {
         report(line, "", message);
     }
 
-    private static void report(int line, String where, String message) {
-        System.err.println("[line " + line + "] Error " + where + ": " + message);
-        hadError = true;
+    static void error(Token token, String message) {
+        if (token.type.equals(EOF)) {
+            report(token.line, " at end", message);
+        } else {
+            report(token.line, " at '" + token.lexeme + "'", message);
+        }
     }
 }
