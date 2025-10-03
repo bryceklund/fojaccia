@@ -22,6 +22,7 @@ public class Fojaccia {
 
     private static final Interpreter interpreter = new Interpreter();
 
+    private static LogLevel logLevel = LogLevel.INFO;
     private static boolean hadError;
     private static boolean hadRuntimeError;
 
@@ -36,10 +37,24 @@ public class Fojaccia {
         }
     }
 
+    public static enum LogLevel {
+        ALL,
+        DEBUG,
+        INFO,
+        WARNING,
+        ERROR
+    }
+
     public static void Log(String message) {
-        String dateTime = new Date(System.currentTimeMillis()).toString();
-        String logMessage = String.format("%s\t%s", dateTime, message);
-        System.out.println(logMessage);
+        Log(logLevel, message);
+    }
+
+    public static void Log(LogLevel level, String message) {
+        if (level.ordinal() >= logLevel.ordinal()) {
+            String dateTime = new Date(System.currentTimeMillis()).toString();
+            String logMessage = String.format("%s\t%s", dateTime, message);
+            System.out.println(logMessage);
+        }
     }
 
     public static void RuntimeError(RuntimeError error) {
@@ -88,11 +103,11 @@ public class Fojaccia {
         Scanner scanner = new Scanner(input);
         List<Token> tokens = scanner.scanTokens();
         Parser parser = new Parser(tokens);
-        Expression expression = parser.parse();
+        List<Stmt> statements = parser.parse();
         if (hadError)
             return;
         // System.out.println(new AstPrinter().print(expression));
-        interpreter.interpret(expression);
+        interpreter.interpret(statements);
     }
 
     private static void report(int line, String where, String message) {

@@ -2,6 +2,11 @@ Interpreter for the Java implementation of the Focaccia language (Fojaccia), by 
 
 ### Basic Grammar
 ```
+program         -> statement* EOF ;
+statement       -> exprStmt | printStmt ;
+exprStmt        -> expression ";" ;
+printStmt       -> "print" expression ";" ;
+
 expression      -> literal
                    | unary
                    | binary

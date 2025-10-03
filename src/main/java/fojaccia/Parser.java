@@ -1,8 +1,11 @@
 package fojaccia;
 
+import java.beans.Statement;
+import java.util.ArrayList;
 import java.util.List;
 
 import static fojaccia.TokenType.*;
+import static fojaccia.Fojaccia.LogLevel;
 
 public class Parser {
 
@@ -16,96 +19,121 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    public Expression parse() {
+    public List<Stmt> parse() {
+        List<Stmt> statements = new ArrayList<>();
+
         try {
-            return expression();
+            while (!atEOF()) {
+                statements.add(statement());
+            }
         } catch (ParseError error) {
             return null;
         }
+
+        return statements;
     }
 
-    private Expression expression() {
+    private Stmt statement() {
+        if (match(PRINT))
+            return printStatement();
+
+        return expressionStatement();
+    }
+
+    private Stmt printStatement() {
+        Expr value = expression();
+        consume(SEMICOLON, "`;` expected after value");
+        return new Stmt.Print(value);
+    }
+
+    private Stmt expressionStatement() {
+        Expr value = expression();
+        consume(SEMICOLON, "`;` expected after value");
+        return new Stmt.Expression(value);
+    }
+
+    private Expr expression() {
         return equality();
     }
 
-    private Expression equality() {
-        Expression exp = comparison();
+    private Expr equality() {
+        Expr exp = comparison();
 
-        while (match(BANG_EQUAL, EQUAL_EQUAL)) {
+        while (match(BANG_EQUAL, EQUAL_EQUAL, AND, OR)) {
             Token operator = previous();
-            Expression right = comparison();
-            exp = new Expression.Binary(exp, operator, right);
+            Expr right = comparison();
+            exp = new Expr.Binary(exp, operator, right);
         }
 
         return exp;
     }
 
-    private Expression comparison() {
-        Expression exp = term();
+    private Expr comparison() {
+        Expr exp = term();
 
         while (match(GREATER, GREATER_EQUAL, LESS, LESS_EQUAL)) {
             Token operator = previous();
-            Expression right = term();
-            exp = new Expression.Binary(exp, operator, right);
+            Expr right = term();
+            exp = new Expr.Binary(exp, operator, right);
         }
 
         return exp;
     }
 
-    private Expression term() {
-        Expression exp = factor();
+    private Expr term() {
+        Expr exp = factor();
 
         while (match(MINUS, PLUS)) {
             Token operator = previous();
-            Expression right = factor();
-            exp = new Expression.Binary(exp, operator, right);
+            Expr right = factor();
+            exp = new Expr.Binary(exp, operator, right);
         }
 
         return exp;
     }
 
-    private Expression factor() {
-        Expression exp = unary();
+    private Expr factor() {
+        Expr exp = unary();
 
         while (match(SLASH, STAR)) {
             Token operator = previous();
-            Expression right = unary();
-            exp = new Expression.Binary(exp, operator, right);
+            Expr right = unary();
+            exp = new Expr.Binary(exp, operator, right);
         }
 
         return exp;
     }
 
-    private Expression unary() {
+    private Expr unary() {
         if (match(BANG, MINUS)) {
             Token operator = previous();
-            return new Expression.Unary(operator, unary());
+            return new Expr.Unary(operator, unary());
         }
         return primary();
     }
 
-    private Expression primary() {
+    private Expr primary() {
         if (match(FALSE)) {
-            Fojaccia.Log("matched false");
-            return new Expression.Literal(false);
+            Fojaccia.Log(LogLevel.DEBUG, "matched false");
+            return new Expr.Literal(false);
         }
 
         if (match(TRUE)) {
-            Fojaccia.Log("matched true");
-            return new Expression.Literal(true);
+            Fojaccia.Log(LogLevel.DEBUG, "matched true");
+            return new Expr.Literal(true);
         }
 
         if (match(NULL))
-            return new Expression.Literal(null);
+            return new Expr.Literal(null);
 
         if (match(NUMBER, STRING)) {
-            return new Expression.Literal(previous().literal);
+            return new Expr.Literal(previous().literal);
         }
 
         if (match(LEFT_PAREN)) {
-            Expression exp = expression();
+            Expr exp = expression();
             consume(RIGHT_PAREN, "Missing ')' after expression");
-            return new Expression.Grouping(exp);
+            return new Expr.Grouping(exp);
         }
 
         throw error(peek(), "Expression expected");

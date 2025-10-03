@@ -1,18 +1,48 @@
 package fojaccia;
 
-public class Interpreter implements Expression.Visitor<Object> {
+// import static fojaccia.Fojaccia.LogLevel;
 
-    public void interpret(Expression exp) {
+import java.util.List;
+
+import fojaccia.Fojaccia.LogLevel;
+import fojaccia.Stmt.Expression;
+import fojaccia.Stmt.Print;
+
+public class Interpreter implements
+        Expr.Visitor<Object>,
+        Stmt.Visitor<Void> {
+
+    public void interpret(List<Stmt> statements) {
         try {
-            Object value = evaluate(exp);
-            System.out.println(makeTreeString(value));
+            for (Stmt statement : statements) {
+                execute(statement);
+            }
+            // Object value = evaluate(exp);
+            // System.out.println(makeTreeString(value));
         } catch (RuntimeError err) {
             Fojaccia.RuntimeError(err);
         }
     }
 
+    private void execute(Stmt statement) {
+        statement.accept(this);
+    }
+
     @Override
-    public Object visitBinary(Expression.Binary exp) {
+    public Void visitExpressionStmt(Expression stmt) {
+        evaluate(stmt.expression);
+        return null;
+    }
+
+    @Override
+    public Void visitPrintStmt(Print stmt) {
+        Object value = evaluate(stmt.expression);
+        System.out.println(makeTreeString(value));
+        return null;
+    }
+
+    @Override
+    public Object visitBinary(Expr.Binary exp) {
         Object left = evaluate(exp.left);
         Object right = evaluate(exp.right);
 
@@ -53,10 +83,10 @@ public class Interpreter implements Expression.Visitor<Object> {
                 verifyNumberOperands(exp.operator, left, right);
                 return (double) left * (double) right;
             case AND:
-                Fojaccia.Log("interpreting AND with left: " + left + ", right: " + right);
+                Fojaccia.Log(LogLevel.DEBUG, "interpreting AND with left: " + left + ", right: " + right);
                 return (boolean) left && (boolean) right;
             case OR:
-                Fojaccia.Log("interpreting OR with left: " + left + ", right: " + right);
+                Fojaccia.Log(LogLevel.DEBUG, "interpreting OR with left: " + left + ", right: " + right);
                 return (boolean) left && (boolean) right;
             default:
                 return null;
@@ -64,7 +94,7 @@ public class Interpreter implements Expression.Visitor<Object> {
     }
 
     @Override
-    public Object visitUnary(Expression.Unary exp) {
+    public Object visitUnary(Expr.Unary exp) {
         Object right = evaluate(exp.right);
 
         switch (exp.operator.type) {
@@ -80,12 +110,12 @@ public class Interpreter implements Expression.Visitor<Object> {
     }
 
     @Override
-    public Object visitGrouping(Expression.Grouping exp) {
+    public Object visitGrouping(Expr.Grouping exp) {
         return evaluate(exp.expression);
     }
 
     @Override
-    public Object visitLiteral(Expression.Literal exp) {
+    public Object visitLiteral(Expr.Literal exp) {
         return exp.value;
     }
 
@@ -135,7 +165,7 @@ public class Interpreter implements Expression.Visitor<Object> {
         return true;
     }
 
-    private Object evaluate(Expression exp) {
+    private Object evaluate(Expr exp) {
         return exp.accept(this);
     }
 }

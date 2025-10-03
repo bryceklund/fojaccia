@@ -1,8 +1,8 @@
 package fojaccia;
 
-abstract class Expression {
+abstract class Expr {
 
-    private Expression() {
+    private Expr() {
         // Private constructor to prevent instantiation
     }
 
@@ -10,7 +10,7 @@ abstract class Expression {
         R visitBinary(Binary exp);
 
         R visitUnary(Unary exp);
-
+ 
         R visitGrouping(Grouping exp);
 
         R visitLiteral(Literal exp);
@@ -18,12 +18,12 @@ abstract class Expression {
 
     abstract <R> R accept(Visitor<R> visitor);
 
-    static class Binary extends Expression {
-        final Expression left;
+    static class Binary extends Expr {
+        final Expr left;
         final Token operator;
-        final Expression right;
+        final Expr right;
 
-        Binary(Expression left, Token operator, Expression right) {
+        Binary(Expr left, Token operator, Expr right) {
             this.left = left;
             this.operator = operator;
             this.right = right;
@@ -35,11 +35,11 @@ abstract class Expression {
         }
     }
 
-    static class Unary extends Expression {
+    static class Unary extends Expr {
         final Token operator;
-        final Expression right;
+        final Expr right;
 
-        Unary(Token operator, Expression right) {
+        Unary(Token operator, Expr right) {
             this.operator = operator;
             this.right = right;
         }
@@ -50,10 +50,10 @@ abstract class Expression {
         }
     }
 
-    static class Grouping extends Expression {
-        final Expression expression;
+    static class Grouping extends Expr {
+        final Expr expression;
 
-        Grouping(Expression expression) {
+        Grouping(Expr expression) {
             this.expression = expression;
         }
 
@@ -63,7 +63,7 @@ abstract class Expression {
         }
     }
 
-    static class Literal extends Expression {
+    static class Literal extends Expr {
         final Object value;
 
         Literal(Object value) {
