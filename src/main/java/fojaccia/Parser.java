@@ -6,7 +6,8 @@ import static fojaccia.TokenType.*;
 
 public class Parser {
 
-    private static class ParseError extends RuntimeException {}
+    private static class ParseError extends RuntimeException {
+    }
 
     private final List<Token> tokens;
     private int current = 0;
@@ -15,7 +16,7 @@ public class Parser {
         this.tokens = tokens;
     }
 
-    Expression parse() {
+    public Expression parse() {
         try {
             return expression();
         } catch (ParseError error) {
@@ -84,9 +85,18 @@ public class Parser {
     }
 
     private Expression primary() {
-        if (match(FALSE)) return new Expression.Literal(false);
-        if (match(TRUE)) return new Expression.Literal(true);
-        if (match(NULL)) return new Expression.Literal(null);
+        if (match(FALSE)) {
+            Fojaccia.Log("matched false");
+            return new Expression.Literal(false);
+        }
+
+        if (match(TRUE)) {
+            Fojaccia.Log("matched true");
+            return new Expression.Literal(true);
+        }
+
+        if (match(NULL))
+            return new Expression.Literal(null);
 
         if (match(NUMBER, STRING)) {
             return new Expression.Literal(previous().literal);
@@ -102,7 +112,7 @@ public class Parser {
     }
 
     private ParseError error(Token token, String message) {
-        Fojaccia.error(token, message);
+        Fojaccia.Error(token, message);
         return new ParseError();
     }
 
@@ -110,9 +120,10 @@ public class Parser {
         advance();
 
         while (!atEOF()) {
-            if (previous().type.equals(SEMICOLON)) return;
+            if (previous().type.equals(SEMICOLON))
+                return;
 
-            switch(peek().type) {
+            switch (peek().type) {
                 case CLASS:
                 case FN:
                 case VAR:
@@ -129,7 +140,8 @@ public class Parser {
     }
 
     private Token consume(TokenType type, String message) {
-        if (check(type)) return advance();
+        if (check(type))
+            return advance();
 
         throw error(peek(), message);
     }
@@ -149,7 +161,8 @@ public class Parser {
     }
 
     private Token advance() {
-        if (!atEOF()) current++;
+        if (!atEOF())
+            current++;
         return previous();
     }
 
@@ -159,8 +172,8 @@ public class Parser {
 
     private Token previous() {
         return current == 0
-            ? tokens.get(current)
-            : tokens.get(current - 1);
+                ? tokens.get(current)
+                : tokens.get(current - 1);
     }
 
     private boolean atEOF() {

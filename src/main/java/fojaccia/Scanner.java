@@ -16,23 +16,23 @@ public class Scanner {
     private int line = 1;
 
     static {
-        keywords =  new HashMap<>();
-        keywords.put("fn",       FN);
-        keywords.put("if",       IF);
-        keywords.put("or",       OR);
-        keywords.put("and",      AND);
-        keywords.put("for",      FOR);
-        keywords.put("var",      VAR);
-        keywords.put("else",     ELSE);
-        keywords.put("null",     NULL);
-        keywords.put("this",     THIS);
-        keywords.put("true" ,    TRUE);
-        keywords.put("class",    CLASS);
-        keywords.put("false",    FALSE);
-        keywords.put("print",    PRINT);
-        keywords.put("super",    SUPER);
-        keywords.put("while",    WHILE);
-        keywords.put("return",   RETURN);
+        keywords = new HashMap<>();
+        keywords.put("fn", FN);
+        keywords.put("if", IF);
+        keywords.put("or", OR);
+        keywords.put("and", AND);
+        keywords.put("for", FOR);
+        keywords.put("var", VAR);
+        keywords.put("else", ELSE);
+        keywords.put("null", NULL);
+        keywords.put("this", THIS);
+        keywords.put("true", TRUE);
+        keywords.put("class", CLASS);
+        keywords.put("false", FALSE);
+        keywords.put("print", PRINT);
+        keywords.put("super", SUPER);
+        keywords.put("while", WHILE);
+        keywords.put("return", RETURN);
     }
 
     Scanner(String source) {
@@ -52,23 +52,50 @@ public class Scanner {
     private void scanToken() {
         char c = nextChar();
         switch (c) {
-            case '(': addToken(LEFT_PAREN);                                         break;
-            case ')': addToken(RIGHT_PAREN);                                        break;
-            case '{': addToken(LEFT_BRACK);                                         break;
-            case '}': addToken(RIGHT_BRACK);                                        break;
-            case ',': addToken(COMMA);                                              break;
-            case '.': addToken(DOT);                                                break;
-            case '+': addToken(PLUS);                                               break;
-            case '-': addToken(MINUS);                                              break;
-            case ';': addToken(SEMICOLON);                                          break;
-            case '!': addToken(match('=') ? BANG_EQUAL    : BANG);         break;
-            case '=': addToken(match('=') ? EQUAL_EQUAL   : EQUAL);        break;
-            case '<': addToken(match('=') ? LESS_EQUAL    : LESS);         break;
-            case '>': addToken(match('=') ? GREATER_EQUAL : GREATER);      break;
+            case '(':
+                addToken(LEFT_PAREN);
+                break;
+            case ')':
+                addToken(RIGHT_PAREN);
+                break;
+            case '{':
+                addToken(LEFT_BRACK);
+                break;
+            case '}':
+                addToken(RIGHT_BRACK);
+                break;
+            case ',':
+                addToken(COMMA);
+                break;
+            case '.':
+                addToken(DOT);
+                break;
+            case '+':
+                addToken(PLUS);
+                break;
+            case '-':
+                addToken(MINUS);
+                break;
+            case ';':
+                addToken(SEMICOLON);
+                break;
+            case '!':
+                addToken(match('=') ? BANG_EQUAL : BANG);
+                break;
+            case '=':
+                addToken(match('=') ? EQUAL_EQUAL : EQUAL);
+                break;
+            case '<':
+                addToken(match('=') ? LESS_EQUAL : LESS);
+                break;
+            case '>':
+                addToken(match('=') ? GREATER_EQUAL : GREATER);
+                break;
             case '*':
                 // Handle closing block comments
                 if (match('/')) {
-                    if (atEOF()) break;
+                    if (atEOF())
+                        break;
                     nextChar();
                 } else {
                     addToken(STAR);
@@ -77,33 +104,40 @@ public class Scanner {
             case '/':
                 // Handle line comments - move to EOL and break
                 if (match('/')) {
-                    while (peek() != '\n' && !atEOF()) nextChar();
+                    while (peek() != '\n' && !atEOF())
+                        nextChar();
                     break;
                 }
                 // Handle block comments
                 if (match('*')) {
                     while (!source.startsWith("*/", current)) {
                         if (atEOF()) {
-                            Fojaccia.error(line, "Unterminated block comment before EOF");
+                            Fojaccia.Error(line, "Unterminated block comment before EOF");
                             break;
                         }
-                        if (peek() == '\n') line++;
+                        if (peek() == '\n')
+                            line++;
                         nextChar();
                     }
                 } else {
                     addToken(SLASH);
                 }
                 break;
-            case ' ', '\r', '\t': break;
-            case '\n': line++;    break;
-            case '"': parseToken(STRING);   break;
+            case ' ', '\r', '\t':
+                break;
+            case '\n':
+                line++;
+                break;
+            case '"':
+                parseToken(STRING);
+                break;
             default:
                 if (isDigit(c)) {
                     parseToken(NUMBER);
                 } else if (isAlpha(c)) {
                     parseToken(IDENTIFIER);
                 } else {
-                    Fojaccia.error(line, "Unexpected character");
+                    Fojaccia.Error(line, "Unexpected character");
                 }
                 break;
         }
@@ -112,11 +146,13 @@ public class Scanner {
     private void parseToken(TokenType type) {
         switch (type) {
             case NUMBER:
-                while (isDigit(peek())) nextChar();
+                while (isDigit(peek()))
+                    nextChar();
                 if (peek() == '.' && isDigit(peekNext())) {
                     nextChar();
 
-                    while (isDigit(peek())) nextChar();
+                    while (isDigit(peek()))
+                        nextChar();
                 }
 
                 addToken(NUMBER, Double.parseDouble(source.substring(start, current)));
@@ -124,11 +160,12 @@ public class Scanner {
 
             case STRING:
                 while (peek() != '"' && !atEOF()) {
-                    if (peek() == '\n') line++;
+                    if (peek() == '\n')
+                        line++;
                     nextChar();
                 }
                 if (atEOF()) {
-                    Fojaccia.error(line, "Unterminated string before EOF");
+                    Fojaccia.Error(line, "Unterminated string before EOF");
                     break;
                 }
 
@@ -140,10 +177,11 @@ public class Scanner {
                 break;
 
             case IDENTIFIER:
-                while (isAlphaNumeric(peek())) nextChar();
+                while (isAlphaNumeric(peek()))
+                    nextChar();
                 type = keywords.get(source.substring(start, current)) == null
-                    ? IDENTIFIER
-                    : keywords.get(source.substring(start, current));
+                        ? IDENTIFIER
+                        : keywords.get(source.substring(start, current));
                 addToken(type);
                 break;
             default:
@@ -156,7 +194,7 @@ public class Scanner {
     }
 
     private boolean isAlpha(char c) {
-        return  (c >= 'a' && c <= 'z') ||
+        return (c >= 'a' && c <= 'z') ||
                 (c >= 'A' && c <= 'Z') ||
                 c == '_';
     }
@@ -171,11 +209,9 @@ public class Scanner {
 
     private void addToken(TokenType type, Object literal) {
         tokens.add(
-            new Token(
-                type, source.substring(start, current),
-                literal, line
-            )
-        );
+                new Token(
+                        type, source.substring(start, current),
+                        literal, line));
     }
 
     private char nextChar() {
@@ -183,20 +219,24 @@ public class Scanner {
     }
 
     private boolean match(char expected) {
-        if (atEOF()) return false;
-        if (source.charAt(current) != expected) return false;
+        if (atEOF())
+            return false;
+        if (source.charAt(current) != expected)
+            return false;
 
         current++;
         return true;
     }
 
     private char peek() {
-        if (atEOF()) return '\0';
+        if (atEOF())
+            return '\0';
         return source.charAt(current);
     }
 
     private char peekNext() {
-        if (current + 1 >= source.length()) return '\0';
+        if (current + 1 >= source.length())
+            return '\0';
         return source.charAt(current + 1);
     }
 
