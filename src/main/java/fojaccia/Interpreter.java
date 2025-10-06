@@ -192,8 +192,16 @@ public class Interpreter implements
                 return left;
             }
         }
-            
+
         return evaluate(exp.right);
+    }
+
+    @Override
+    public Void visitWhileStmt(Stmt.While stmt) {
+        while (isTruthy(evaluate(stmt.condition))) {
+            execute(stmt.body);
+        }
+        return null;
     }
 
     private String makeTreeString(Object tree) {

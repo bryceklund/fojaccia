@@ -11,7 +11,8 @@ Ensure you have Java 21 installed and build Fojaccia.java with your favorite IDE
 program         -> declaration* EOF ;
 block           -> "{" declaration "}" ;
 declaration     -> varDec | statement ;
-statement       -> exprStmt | ifStmt | printStmt | whileStmt | block ;
+statement       -> exprStmt | forStmt | ifStmt | printStmt | whileStmt | block ;
+forStmt         -> "for" "(" ( varDec | exprStmt | ";" ) expression? ";" expression ")" statement ;
 whileStmt       -> "while" "(" expression ")" statement ;
 ifStmt          -> "if" "(" expression ")" statement ( "else" statement )? ;
 varDec          -> "var" IDENTIFIER ( "=" statement )? ";" ;
