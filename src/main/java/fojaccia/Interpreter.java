@@ -6,6 +6,7 @@ import java.util.List;
 
 import fojaccia.Fojaccia.LogLevel;
 import fojaccia.Stmt.Expression;
+import fojaccia.Stmt.If;
 import fojaccia.Stmt.Print;
 
 public class Interpreter implements
@@ -88,6 +89,17 @@ public class Interpreter implements
     }
 
     @Override
+    public Void visitIfStmt(If stmt) {
+        if (isTruthy(stmt.condition)) {
+            execute(stmt.thenBranch);
+        } else if (stmt.elseBranch != null) {
+            execute(stmt.elseBranch);
+        }
+
+        return null;
+    }
+
+    @Override
     public Object visitBinary(Expr.Binary exp) {
         Object left = evaluate(exp.left);
         Object right = evaluate(exp.right);
@@ -128,12 +140,14 @@ public class Interpreter implements
             case STAR:
                 verifyNumberOperands(exp.operator, left, right);
                 return (double) left * (double) right;
-            case AND:
-                Fojaccia.Log(LogLevel.DEBUG, "interpreting AND with left: " + left + ", right: " + right);
-                return (boolean) left && (boolean) right;
-            case OR:
-                Fojaccia.Log(LogLevel.DEBUG, "interpreting OR with left: " + left + ", right: " + right);
-                return (boolean) left && (boolean) right;
+            // case AND:
+            // Fojaccia.Log(LogLevel.DEBUG, "interpreting AND with left: " + left + ",
+            // right: " + right);
+            // return (boolean) left && (boolean) right;
+            // case OR:
+            // Fojaccia.Log(LogLevel.DEBUG, "interpreting OR with left: " + left + ", right:
+            // " + right);
+            // return (boolean) left && (boolean) right;
             default:
                 return null;
         }
@@ -163,6 +177,23 @@ public class Interpreter implements
     @Override
     public Object visitLiteral(Expr.Literal exp) {
         return exp.value;
+    }
+
+    @Override
+    public Object visitLogical(Expr.Logical exp) {
+        Object left = evaluate(exp.left);
+
+        if (exp.operator.type == TokenType.OR) {
+            if (isTruthy(left)) {
+                return left;
+            }
+        } else {
+            if (!isTruthy(left)) {
+                return left;
+            }
+        }
+            
+        return evaluate(exp.right);
     }
 
     private String makeTreeString(Object tree) {

@@ -6,12 +6,14 @@ Ensure you have Java 21 installed and build Fojaccia.java with your favorite IDE
 
 ## Language Crap For Nerds
 
-### Basic Grammar
+### Grammar
 ```
 program         -> declaration* EOF ;
 block           -> "{" declaration "}" ;
 declaration     -> varDec | statement ;
-statement       -> exprStmt | printStmt | block ;
+statement       -> exprStmt | ifStmt | printStmt | whileStmt | block ;
+whileStmt       -> "while" "(" expression ")" statement ;
+ifStmt          -> "if" "(" expression ")" statement ( "else" statement )? ;
 varDec          -> "var" IDENTIFIER ( "=" statement )? ";" ;
 exprStmt        -> expression ";" ;
 printStmt       -> "print" expression ";" ;
@@ -32,7 +34,9 @@ operator        ->   "=="  | "!=" | "<" | "<=" | ">"
 declaration     -> statement
 statement       -> expression
 expression      -> assignment ;
-assignment      -> IDENTIFIER "=" assignment | equality ;
+assignment      -> IDENTIFIER "=" assignment | equality | logic_or ;
+logic_or        -> logic_and ( "or" logic_and )* ;
+logic_and       -> equality ( "and" equality )* ;
 equality        -> comparison ( ( "==" | "!=" ) comparison )* ;
 comparison      -> term ( ( ">" | ">=" | "<" | "<=" ) term )* ;
 term            -> factor ( ( "-" | "+" ) factor )* ;
