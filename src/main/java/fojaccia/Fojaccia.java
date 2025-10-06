@@ -22,7 +22,7 @@ public class Fojaccia {
 
     private static final Interpreter interpreter = new Interpreter();
 
-    private static LogLevel logLevel = LogLevel.INFO;
+    private static LogLevel logLevel = LogLevel.DEBUG;
     private static boolean hadError;
     private static boolean hadRuntimeError;
 
@@ -50,9 +50,20 @@ public class Fojaccia {
     }
 
     public static void Log(LogLevel level, String message) {
+        Log(level, -1, message);
+    }
+
+    public static void Log(LogLevel level, int line, String message) {
+
         if (level.ordinal() >= logLevel.ordinal()) {
-            String dateTime = new Date(System.currentTimeMillis()).toString();
-            String logMessage = String.format("%s\t%s", dateTime, message);
+            StringBuilder logMessage = new StringBuilder();
+            logMessage.append(new Date(System.currentTimeMillis()).toString());
+            logMessage.append("  " + level.name());
+            logMessage.append("\t");
+            if (line > -1) {
+                logMessage.append("[line " + line + "] ");
+            }
+            logMessage.append(message);
             System.out.println(logMessage);
         }
     }
