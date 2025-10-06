@@ -18,6 +18,11 @@ class AstPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitLogical(Expr.Logical expr) {
+        return "";
+    }
+
+    @Override
     public String visitAssignment(Expr.Assignment expr) {
         return "";
     }

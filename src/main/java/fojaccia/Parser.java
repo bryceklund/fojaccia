@@ -1,6 +1,7 @@
 package fojaccia;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import static fojaccia.TokenType.*;
@@ -58,11 +59,69 @@ public class Parser {
             return printStatement();
         if (match(WHILE))
             return whileStatement();
+        if (match(FOR))
+            return forStatement();
 
         if (match(LEFT_BRACK))
             return new Stmt.Block(block());
 
         return expressionStatement();
+    }
+
+    /**
+     * Anatomy: for (var i = 0; i < 11; i++) {...}
+     * Initializer: `int i = 0;`
+     * Condition: `i < 11;`
+     * Increment: `i++;`
+     * Body: `{...}`
+     */
+    private Stmt forStatement() {
+        consume(LEFT_PAREN, "`(` expected after `for`");
+
+        Stmt initializer;
+        if (match(SEMICOLON)) {
+            initializer = null; // why?
+        } else if (match(VAR)) {
+            initializer = varDeclaration();
+        } else {
+            initializer = expressionStatement();
+        }
+
+        Expr condition = null;
+        if (!check(SEMICOLON)) {
+            condition = expression();
+        }
+        consume(SEMICOLON, "`;` expected after loop condition");
+
+        Expr increment = null;
+        if (!check(RIGHT_PAREN)) {
+            increment = expression();
+        }
+        consume(RIGHT_PAREN, "`)` expected after for clauses");
+        Stmt body = statement();
+
+        // Parse and interpret an expression out of the incrementer, i.e. `i++`
+        // This goes into an arraylist which Block executes entry by entry within the
+        // corresponding scope environment
+        if (increment != null) {
+            body = new Stmt.Block(
+                    Arrays.asList(
+                            body,
+                            new Stmt.Expression(increment)));
+        }
+
+        if (condition == null)
+            condition = new Expr.Literal(true);
+        body = new Stmt.While(condition, body);
+
+        if (initializer != null) {
+            body = new Stmt.Block(
+                    Arrays.asList(
+                            initializer,
+                            body));
+        }
+
+        return body;
     }
 
     private Stmt whileStatement() {

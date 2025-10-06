@@ -58,7 +58,7 @@ public class Interpreter implements
     @Override
     public Object visitAssignment(Expr.Assignment expr) {
         Object value = evaluate(expr.value);
-        Fojaccia.Log("visiting assignment expression with value: " + value);
+        Fojaccia.Log(LogLevel.DEBUG, "visiting assignment expression with value: " + value);
         environment.assign(expr.name, value);
         return value;
     }
@@ -77,7 +77,7 @@ public class Interpreter implements
     @Override
     public Void visitExpressionStmt(Expression stmt) {
         Object value = evaluate(stmt.expression);
-        System.out.println(makeTreeString(value));
+        // System.out.println(makeTreeString(value));
         return null;
     }
 
