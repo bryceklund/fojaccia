@@ -6,17 +6,20 @@ class AstPrinter implements Expr.Visitor<String> {
         Expr expression = new Expr.Binary(
                 new Expr.Unary(
                         new Token(TokenType.MINUS, "-", null, 1),
-                        new Expr.Literal(123)
-                ),
+                        new Expr.Literal(123)),
                 new Token(TokenType.STAR, "*", null, 1),
-                new Expr.Grouping(new Expr.Literal(45.67))
-        );
+                new Expr.Grouping(new Expr.Literal(45.67)));
 
         System.out.println(new AstPrinter().print(expression));
     }
 
     String print(Expr exp) {
         return exp.accept(this);
+    }
+
+    @Override
+    public String visitVariable(Expr.Variable expr) {
+        return "";
     }
 
     @Override
@@ -31,7 +34,8 @@ class AstPrinter implements Expr.Visitor<String> {
 
     @Override
     public String visitLiteral(Expr.Literal exp) {
-        if (exp.value == null) return "null";
+        if (exp.value == null)
+            return "null";
         return exp.value.toString();
     }
 

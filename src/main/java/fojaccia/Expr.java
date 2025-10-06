@@ -6,19 +6,38 @@ abstract class Expr {
         // Private constructor to prevent instantiation
     }
 
-    interface Visitor<R> {
+    public interface Visitor<R> {
         R visitBinary(Binary exp);
 
         R visitUnary(Unary exp);
- 
+
         R visitGrouping(Grouping exp);
 
         R visitLiteral(Literal exp);
+
+        R visitVariable(Variable exp);
+
+        R visitAssignment(Assignment exp);
     }
 
     abstract <R> R accept(Visitor<R> visitor);
 
-    static class Binary extends Expr {
+    public static class Assignment extends Expr {
+        final Token name;
+        final Expr value;
+
+        public Assignment(Token name, Expr value) {
+            this.name = name;
+            this.value = value;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitAssignment(this);
+        }
+    }
+
+    public static class Binary extends Expr {
         final Expr left;
         final Token operator;
         final Expr right;
@@ -35,11 +54,11 @@ abstract class Expr {
         }
     }
 
-    static class Unary extends Expr {
+    public static class Unary extends Expr {
         final Token operator;
         final Expr right;
 
-        Unary(Token operator, Expr right) {
+        public Unary(Token operator, Expr right) {
             this.operator = operator;
             this.right = right;
         }
@@ -50,10 +69,10 @@ abstract class Expr {
         }
     }
 
-    static class Grouping extends Expr {
+    public static class Grouping extends Expr {
         final Expr expression;
 
-        Grouping(Expr expression) {
+        public Grouping(Expr expression) {
             this.expression = expression;
         }
 
@@ -63,16 +82,29 @@ abstract class Expr {
         }
     }
 
-    static class Literal extends Expr {
+    public static class Literal extends Expr {
         final Object value;
 
-        Literal(Object value) {
+        public Literal(Object value) {
             this.value = value;
         }
 
         @Override
         <R> R accept(Visitor<R> visitor) {
             return visitor.visitLiteral(this);
+        }
+    }
+
+    public static class Variable extends Expr {
+        final Token name;
+
+        public Variable(Token name) {
+            this.name = name;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitVariable(this);
         }
     }
 }

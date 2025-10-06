@@ -1,6 +1,5 @@
 package fojaccia;
 
-import java.beans.Statement;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,22 +21,55 @@ public class Parser {
     public List<Stmt> parse() {
         List<Stmt> statements = new ArrayList<>();
 
-        try {
-            while (!atEOF()) {
-                statements.add(statement());
-            }
-        } catch (ParseError error) {
-            return null;
+        while (!atEOF()) {
+            statements.add(declaration());
         }
 
         return statements;
+    }
+
+    private Stmt declaration() {
+        try {
+            if (match(VAR))
+                return varDeclaration();
+            return statement();
+        } catch (ParseError error) {
+            synchronize();
+            return null;
+        }
+    }
+
+    private Stmt varDeclaration() {
+        Token name = consume(IDENTIFIER, "identifier expected");
+
+        Expr initializer = null;
+        if (match(EQUAL)) {
+            initializer = expression();
+        }
+
+        consume(SEMICOLON, "`;` expected after declaration");
+        return new Stmt.Var(name, initializer);
     }
 
     private Stmt statement() {
         if (match(PRINT))
             return printStatement();
 
+        if (match(LEFT_BRACK))
+            return new Stmt.Block(block());
+
         return expressionStatement();
+    }
+
+    private List<Stmt> block() {
+        List<Stmt> statements = new ArrayList<>();
+
+        while (!check(RIGHT_BRACK) && !atEOF()) {
+            statements.add(declaration());
+        }
+
+        consume(RIGHT_BRACK, "`}` expected after block");
+        return statements;
     }
 
     private Stmt printStatement() {
@@ -53,7 +85,24 @@ public class Parser {
     }
 
     private Expr expression() {
-        return equality();
+        return assignment();
+    }
+
+    private Expr assignment() {
+        Expr expr = equality();
+
+        if (match(EQUAL)) {
+            Token equals = previous();
+            Expr value = assignment();
+
+            if (expr instanceof Expr.Variable) {
+                Token name = ((Expr.Variable) expr).name;
+                return new Expr.Assignment(name, value);
+            }
+            error(equals, "Invalid token assignment");
+        }
+
+        return expr;
     }
 
     private Expr equality() {
@@ -125,6 +174,10 @@ public class Parser {
 
         if (match(NULL))
             return new Expr.Literal(null);
+
+        if (match(IDENTIFIER)) {
+            return new Expr.Variable(previous());
+        }
 
         if (match(NUMBER, STRING)) {
             return new Expr.Literal(previous().literal);
