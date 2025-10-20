@@ -1,5 +1,7 @@
 package fojaccia;
 
+import java.util.List;
+
 abstract class Expr {
 
     private Expr() {
@@ -10,6 +12,8 @@ abstract class Expr {
         R visitBinary(Binary exp);
 
         R visitUnary(Unary exp);
+
+        R visitCall(Call exp);
 
         R visitGrouping(Grouping exp);
 
@@ -68,6 +72,23 @@ abstract class Expr {
         @Override
         <R> R accept(Visitor<R> visitor) {
             return visitor.visitUnary(this);
+        }
+    }
+
+    public static class Call extends Expr {
+        Expr callee;
+        Token paren;
+        List<Expr> arguments;
+
+        public Call(Expr callee, Token paren, List<Expr> arguments) {
+            this.callee = callee;
+            this.paren = paren;
+            this.arguments = arguments;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitCall(this);
         }
     }
 

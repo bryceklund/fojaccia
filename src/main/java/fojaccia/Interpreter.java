@@ -1,8 +1,11 @@
 package fojaccia;
 
+import java.util.ArrayList;
+
 // import static fojaccia.Fojaccia.LogLevel;
 
 import java.util.List;
+import java.util.stream.Collectors;
 
 import fojaccia.Fojaccia.LogLevel;
 import fojaccia.Stmt.Expression;
@@ -13,7 +16,46 @@ public class Interpreter implements
         Expr.Visitor<Object>,
         Stmt.Visitor<Void> {
 
-    private Environment environment = new Environment();
+    final Environment globals = new Environment();
+    private Environment environment = globals;
+
+    public static final String NATIVE_CLOCK = "clock";
+    public static final String NATIVE_PRINT = "print";
+
+    Interpreter() {
+        globals.define(NATIVE_CLOCK, new FojCallable() {
+            @Override
+            public int arity() {
+                return 0;
+            }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                return (double) System.currentTimeMillis() / 1000.0;
+            }
+
+            @Override
+            public String toString() {
+                return "<native function>";
+            }
+        });
+
+        globals.define(NATIVE_PRINT, new FojCallable(String message) {
+            @Override
+            public int arity() { return 1; }
+
+            @Override
+            public Object call(Interpreter interpreter, List<Object> arguments) {
+                System.out.println(arguments.get(0));
+                return new Object();
+            }
+
+            @Override
+            public String toString() {
+                return "<native function>";
+            }
+        });
+    }
 
     public void interpret(List<Stmt> statements) {
         try {
@@ -76,8 +118,10 @@ public class Interpreter implements
 
     @Override
     public Void visitExpressionStmt(Expression stmt) {
-        Object value = evaluate(stmt.expression);
-        // System.out.println(makeTreeString(value));
+        if (Fojaccia.repl) {
+            Object value = evaluate(stmt.expression);
+            System.out.println(makeTreeString(value));
+        }
         return null;
     }
 
@@ -151,6 +195,27 @@ public class Interpreter implements
             default:
                 return null;
         }
+    }
+
+    @Override
+    public Object visitCall(Expr.Call exp) {
+        Object callee = evaluate(exp);
+
+        if (!(callee instanceof FojCallable)) {
+            throw new RuntimeError(exp.paren, "Only functions and classes can be called");
+        }
+
+        List<Object> arguments = exp.arguments.stream()
+                .map(argument -> evaluate(argument))
+                .toList();
+
+        FojCallable function = (FojCallable) callee;
+        if (arguments.size() != function.arity()) {
+            throw new RuntimeError(exp.paren,
+                    String.format("Expected %s arguments but got %s",
+                            function.arity(), arguments.size()));
+        }
+        return function.call(this, arguments);
     }
 
     @Override

@@ -20,6 +20,8 @@ public abstract class Stmt {
         R visitVarStmt(Var statement);
 
         R visitBlockStmt(Block statement);
+
+        R visitFunctionStmt(Function statement);
     }
 
     abstract <R> R accept(Visitor<R> visitor);
@@ -35,6 +37,24 @@ public abstract class Stmt {
         <R> R accept(Visitor<R> visitor) {
             return visitor.visitExpressionStmt(this);
         }
+    }
+
+    static class Function extends Stmt {
+        Token name;
+        List<Token> params;
+        List<Stmt> body;
+
+        Function(Token name, List<Token> params, List<Stmt> body) {
+            this.name = name;
+            this.params = params;
+            this.body = body;
+        }
+
+        @Override
+        <R> R accept(Visitor<R> visitor) {
+            return visitor.visitFunctionStmt(this);
+        }
+
     }
 
     static class Block extends Stmt {

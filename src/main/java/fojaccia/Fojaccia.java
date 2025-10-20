@@ -22,6 +22,7 @@ public class Fojaccia {
 
     private static final Interpreter interpreter = new Interpreter();
 
+    public static boolean repl = false;
     private static LogLevel logLevel = LogLevel.INFO;
     private static boolean hadError;
     private static boolean hadRuntimeError;
@@ -98,6 +99,7 @@ public class Fojaccia {
     private static void runPrompt() throws IOException {
         InputStreamReader input = new InputStreamReader(System.in);
         BufferedReader reader = new BufferedReader(input);
+        repl = true;
 
         for (;;) {
             System.out.print("> ");
@@ -116,7 +118,7 @@ public class Fojaccia {
         List<Stmt> statements = parser.parse();
         if (hadError)
             return;
-        // System.out.println(new AstPrinter().print(expression));
+        System.out.println(new AstPrinter().print(expression));
         interpreter.interpret(statements);
     }
 

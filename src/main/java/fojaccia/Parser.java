@@ -33,6 +33,8 @@ public class Parser {
         try {
             if (match(VAR))
                 return varDeclaration();
+            if (match(FN))
+                return function("function");
             return statement();
         } catch (ParseError error) {
             synchronize();
@@ -171,6 +173,28 @@ public class Parser {
         return new Stmt.Expression(value);
     }
 
+    private Stmt.Function function(String type) {
+        Token name = consume(IDENTIFIER, "Expected " + type + " name");
+        List<Token> parameters = new ArrayList<>();
+        consume(LEFT_PAREN, "Expected `(` after " + type + " name");
+
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (parameters.size() >= 255) {
+                    error(peek(), "Can't have more than 255 parameters");
+                }
+
+                parameters.add(consume(IDENTIFIER, "Expected parameter name"));
+            } while (match(COMMA));
+        }
+
+        consume(RIGHT_PAREN, "`)` expected after parameter list");
+        consume(LEFT_BRACK, "`{` expected before " + type + " body");
+        List<Stmt> body = block();
+
+        return new Stmt.Function(name, parameters, body);
+    }
+
     private Expr expression() {
         return assignment();
     }
@@ -269,7 +293,38 @@ public class Parser {
             Token operator = previous();
             return new Expr.Unary(operator, unary());
         }
-        return primary();
+        return call();
+    }
+
+    private Expr call() {
+        Expr expr = primary();
+
+        while (true) {
+            if (match(LEFT_PAREN)) {
+                expr = finishCall(expr);
+            } else {
+                break;
+            }
+        }
+        return expr;
+    }
+
+    private Expr finishCall(Expr callee) {
+        List<Expr> arguments = new ArrayList<>();
+
+        if (!check(RIGHT_PAREN)) {
+            do {
+                if (arguments.size() >= 255) {
+                    error(peek(), "Can't have more than 255 arguments");
+                }
+
+                arguments.add(expression());
+            } while (match(COMMA));
+        }
+
+        Token paren = consume(RIGHT_PAREN, "`)` expected after argument list");
+
+        return new Expr.Call(callee, paren, arguments);
     }
 
     private Expr primary() {
