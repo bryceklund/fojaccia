@@ -1,0 +1,7 @@
+fn printDown(n) {
+    if (n <= 1) return;
+    print n;
+    return printDown(n - 1);
+  }
+
+printDown(10);

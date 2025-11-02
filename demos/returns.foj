@@ -1,0 +1,21 @@
+print "a function with a return";
+
+fn returnFive() {
+    return 5; 
+  }
+
+print "a function that prints the return value of a function";
+
+fn printVal() {
+    print "the return value of returnFive is: " + returnFive();
+    print returnFive();
+  }
+
+printVal();
+
+print "a function that returns a sum";
+fn sum(n, m) {
+    return n + m;
+  }
+
+print sum(2, 1);

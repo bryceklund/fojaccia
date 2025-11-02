@@ -14,4 +14,23 @@
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
 
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.codehaus.mojo</groupId>
+        <artifactId>exec-maven-plugin</artifactId>
+        <version>3.6.2</version>
+        <configuration>
+          <mainClass>
+            fojaccia.Fojaccia
+          </mainClass>
+          <environmentVariables>
+            <LANG>en_US</LANG>
+          </environmentVariables>
+          <executable>maven</executable>
+        </configuration>
+        </plugin>
+    </plugins>
+  </build>
+
 </project>

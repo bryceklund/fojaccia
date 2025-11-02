@@ -1,0 +1,34 @@
+// while loop
+print "while loop:";
+var w = 0;
+var temp = 0;
+while (w < 10) {
+  print w;
+  w = w + 1;
+}
+
+
+// for loop
+print "for loop:";
+temp = 0;
+
+for (var f = 0; f < 10; f = temp + 1) {
+    temp = f;
+    print "-> for loop iteration";
+    print f;
+  }
+
+// functions!!!
+print "some functions:";
+fn helloWorld() {
+    print "hello, world!";
+  }
+
+// helloWorld();
+
+fn greet(name, job) {
+    print "Your name is: " + name + " and your job is: " + job;
+  }
+
+print "greet('bryce', 'engineer')";
+// greet("bryce", "engineer");

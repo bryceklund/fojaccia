@@ -20,110 +20,118 @@ import static fojaccia.TokenType.EOF;
 
 public class Fojaccia {
 
-    private static final Interpreter interpreter = new Interpreter();
+  private static final Interpreter interpreter = new Interpreter();
 
-    public static boolean repl = false;
-    private static LogLevel logLevel = LogLevel.INFO;
-    private static boolean hadError;
-    private static boolean hadRuntimeError;
+  public static boolean repl = false;
+  private static LogLevel logLevel = LogLevel.INFO;
+  private static boolean hadError;
+  private static boolean hadRuntimeError;
 
-    public static void main(String[] args) throws IOException {
-        if (args.length > 1) {
-            System.out.println("Usage: foj <script>");
-            System.exit(64); // EX_USAGE
-        } else if (args.length == 1) {
-            runFile(args[0]);
-        } else {
-            runPrompt();
-        }
+  public static void main(String[] args) throws IOException {
+    if (args.length > 1) {
+      System.out.println("Usage: foj <script>");
+      System.exit(64); // EX_USAGE
+    } else if (args.length == 1) {
+      runFile(args[0]);
+    } else {
+      runPrompt();
     }
+  }
 
-    public static enum LogLevel {
-        ALL,
-        DEBUG,
-        INFO,
-        WARNING,
-        ERROR
+  public static enum LogLevel {
+    ALL,
+    DEBUG,
+    INFO,
+    WARNING,
+    ERROR
+  }
+
+  private static LogLevel getLogLevel() {
+    if (logLevel == null) {
+      return LogLevel.INFO;
     }
+    return logLevel;
+  }
 
-    public static void Log(String message) {
-        Log(logLevel, message);
+  public static void Log(String message) {
+    Log(logLevel, message);
+  }
+
+  public static void Log(LogLevel level, String message) {
+    Log(level, -1, message);
+  }
+
+  public static void Log(LogLevel level, int line, String message) {
+    if (level.ordinal() >= getLogLevel().ordinal()) {
+      StringBuilder logMessage = new StringBuilder();
+      logMessage.append(new Date(System.currentTimeMillis()).toString());
+      logMessage.append("  " + level.name());
+      logMessage.append("\t");
+      if (line > -1) {
+        logMessage.append("[line " + line + "] ");
+      }
+      logMessage.append(message);
+      System.out.println(logMessage);
     }
+  }
 
-    public static void Log(LogLevel level, String message) {
-        Log(level, -1, message);
+  public static void RuntimeError(RuntimeError error) {
+    System.err.println(error.getMessage() + "\n" +
+        "[line " + error.token.line + "]");
+
+    hadRuntimeError = true;
+  }
+
+  public static void Error(int line, String message) {
+    report(line, "", message);
+  }
+
+  public static void Error(Token token, String message) {
+    if (token.type.equals(EOF)) {
+      report(token.line, " at end", message);
+    } else {
+      report(token.line, " at '" + token.lexeme + "'", message);
     }
+  }
 
-    public static void Log(LogLevel level, int line, String message) {
-        if (level.ordinal() >= logLevel.ordinal()) {
-            StringBuilder logMessage = new StringBuilder();
-            logMessage.append(new Date(System.currentTimeMillis()).toString());
-            logMessage.append("  " + level.name());
-            logMessage.append("\t");
-            if (line > -1) {
-                logMessage.append("[line " + line + "] ");
-            }
-            logMessage.append(message);
-            System.out.println(logMessage);
-        }
+  private static void runFile(String path) throws IOException {
+    byte[] bytes = Files.readAllBytes(Paths.get(path));
+    Log("Running file from path: " + path);
+    run(new String(bytes, Charset.defaultCharset()));
+    if (hadError)
+      System.exit(65); // EX_DATAERR
+    if (hadRuntimeError)
+      System.exit(70); // EX_SOFTWARE
+  }
+
+  private static void runPrompt() throws IOException {
+    InputStreamReader input = new InputStreamReader(System.in);
+    BufferedReader reader = new BufferedReader(input);
+    repl = true;
+
+    for (;;) {
+      System.out.print("> ");
+      String line = reader.readLine();
+      if (line == null)
+        break;
+      run(line);
+      hadError = false;
     }
+  }
 
-    public static void RuntimeError(RuntimeError error) {
-        System.err.println(error.getMessage() + "\n" +
-                "[line " + error.token.line + "]");
+  private static void run(String input) {
+    Scanner scanner = new Scanner(input);
+    List<Token> tokens = scanner.scanTokens();
+    Parser parser = new Parser(tokens);
+    List<Stmt> statements = parser.parse();
+    if (hadError)
+      return;
+    // System.out.println(new AstPrinter().print(expression));
+    interpreter.interpret(statements);
+  }
 
-        hadRuntimeError = true;
-    }
-
-    public static void Error(int line, String message) {
-        report(line, "", message);
-    }
-
-    public static void Error(Token token, String message) {
-        if (token.type.equals(EOF)) {
-            report(token.line, " at end", message);
-        } else {
-            report(token.line, " at '" + token.lexeme + "'", message);
-        }
-    }
-
-    private static void runFile(String path) throws IOException {
-        byte[] bytes = Files.readAllBytes(Paths.get(path));
-        run(new String(bytes, Charset.defaultCharset()));
-        if (hadError)
-            System.exit(65); // EX_DATAERR
-        if (hadRuntimeError)
-            System.exit(70); // EX_SOFTWARE
-    }
-
-    private static void runPrompt() throws IOException {
-        InputStreamReader input = new InputStreamReader(System.in);
-        BufferedReader reader = new BufferedReader(input);
-        repl = true;
-
-        for (;;) {
-            System.out.print("> ");
-            String line = reader.readLine();
-            if (line == null)
-                break;
-            run(line);
-            hadError = false;
-        }
-    }
-
-    private static void run(String input) {
-        Scanner scanner = new Scanner(input);
-        List<Token> tokens = scanner.scanTokens();
-        Parser parser = new Parser(tokens);
-        List<Stmt> statements = parser.parse();
-        if (hadError)
-            return;
-        System.out.println(new AstPrinter().print(expression));
-        interpreter.interpret(statements);
-    }
-
-    private static void report(int line, String where, String message) {
-        Log("[line " + line + "] Error " + where + ": " + message);
-        hadError = true;
-    }
+  private static void report(int line, String where, String message) {
+    Log("[line " + line + "] Error " + where + ": " + message);
+    hadError = true;
+  }
 }

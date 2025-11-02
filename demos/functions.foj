@@ -1,0 +1,26 @@
+print "a function with no args:";
+fn helloWorld() {
+    print "this function says hello, world!";
+  }
+
+helloWorld();
+
+print "";
+print "a function that takes a name and a job:";
+fn greet(name, job) {
+    print "your name is: " + name + " and your job is: " + job;
+  }
+
+var me = "bruce";
+var occupation = "engineer";
+
+greet(me, occupation);
+
+
+print "";
+print "a function that prints one variable";
+fn oneThing(thing) {
+    print thing;
+  }
+
+oneThing("test thing");

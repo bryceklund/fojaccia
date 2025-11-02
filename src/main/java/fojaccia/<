@@ -1,0 +1,22 @@
+  ~/repos/fojaccia                                                       Size  
+   src                                                                     -  
+     main                                                                  -  
+       java                                                                -  
+         fojaccia                                                          -  
+         │ 󰬷 AstPrinter.java                                          1.74 KB  
+         │ 󰬷 Environment.java                                          1.36 KB  
+         │ 󰬷 Expr.java                                                 3.31 KB  
+         │ 󰬷 FojCallable.java                                            161 B  
+         │ 󰬷 FojFunction.java                                  󰄱        768 B  
+         │ 󰬷 Fojaccia.java                                            3.71 KB  
+         │ 󰬷 Interpreter.java                                 󰄱      8.24 KB  
+         │ 󰬷 Parser.java                                             10.68 KB  
+         │ 󰬷 RuntimeError.java                                           205 B  
+         │ 󰬷 Scanner.java                                               6.8 KB  
+         │ 󰬷 Stmt.java                                                 2.91 KB  
+         │ 󰬷 Token.java                                                  433 B  
+         └ 󰬷 TokenType.java                                              524 B  
+    README.md                                                         2.39 KB  
+   * demo.foj                                                  󰄱        368 B  
+   󰗀 pom.xml                                                             662 B  
+   (7 hidden items)

@@ -1,0 +1,23 @@
+print "let's compose a function now";
+
+print "addTwo(n) adds 2 to n";
+fn addTwo(n) {
+    return n + 2;
+  }
+
+print "isEven(n) checks if n is even";
+fn isEven(n) {
+    return (n / 2) == 0;
+  }
+
+print "addTwo(1)";
+print addTwo(1);
+
+print "addTwo(addTwo(1))";
+print addTwo(addTwo(1));
+
+print "isEven(addTwo(1))";
+print isEven(addTwo(1));
+
+print "isEven(addTwo(2))";
+print isEven(addTwo(2));
