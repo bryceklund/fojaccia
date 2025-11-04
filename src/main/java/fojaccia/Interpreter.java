@@ -1,13 +1,10 @@
 package fojaccia;
 
-import static fojaccia.Fojaccia.Log;
-
 import java.util.ArrayList;
 
-// import static fojaccia.Fojaccia.LogLevel;
-
+import java.util.Map;
+import java.util.HashMap;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import fojaccia.Fojaccia.LogLevel;
 import fojaccia.Stmt.Expression;
@@ -19,6 +16,7 @@ public class Interpreter implements
     Stmt.Visitor<Void> {
 
   final Environment globals = new Environment();
+  private final Map<Expr, Integer> locals = new HashMap<>();
   private Environment environment = globals;
 
   public static final String NATIVE_CLOCK = "clock";
@@ -75,6 +73,10 @@ public class Interpreter implements
     statement.accept(this);
   }
 
+  void resolve(Expr expr, int depth) {
+    locals.put(expr, depth);
+  }
+
   void executeBlock(List<Stmt> statements, Environment environment) {
     Environment previous = this.environment;
 
@@ -91,7 +93,7 @@ public class Interpreter implements
 
   @Override
   public Void visitFunctionStmt(Stmt.Function stmt) {
-    FojFunction function = new FojFunction(stmt);
+    FojFunction function = new FojFunction(stmt, environment);
     environment.define(stmt.name.lexeme, function);
     return null;
   }

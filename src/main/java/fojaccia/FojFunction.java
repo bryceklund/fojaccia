@@ -1,13 +1,16 @@
 package fojaccia;
 
 import java.util.List;
+
 import fojaccia.Fojaccia.LogLevel;
 
 public class FojFunction implements FojCallable {
   private final Stmt.Function declaration;
+  private final Environment closure;
 
-  FojFunction(Stmt.Function declaration) {
+  FojFunction(Stmt.Function declaration, Environment closure) {
     this.declaration = declaration;
+    this.closure = closure;
   }
 
   @Override
@@ -17,7 +20,7 @@ public class FojFunction implements FojCallable {
 
   @Override
   public Object call(Interpreter interpreter, List<Object> arguments) {
-    Environment environment = new Environment(interpreter.globals);
+    Environment environment = new Environment(closure);
 
     for (int i = 0; i < declaration.params.size(); i++) {
       environment.define(declaration.params.get(i).lexeme, arguments.get(i));
