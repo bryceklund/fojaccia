@@ -106,14 +106,21 @@ public class Interpreter implements
 
   @Override
   public Object visitVariable(Expr.Variable expr) {
-    return environment.get(expr.name);
+    return lookUpVariable(expr.name, expr);
   }
 
   @Override
   public Object visitAssignment(Expr.Assignment expr) {
     Object value = evaluate(expr.value);
     Fojaccia.Log(LogLevel.DEBUG, "visiting assignment expression with value: " + value);
-    environment.assign(expr.name, value);
+
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      environment.assignAt(distance, expr.name, value);
+    } else {
+      globals.assign(expr.name, value);
+    }
+
     return value;
   }
 
@@ -304,6 +311,15 @@ public class Interpreter implements
       execute(stmt.body);
     }
     return null;
+  }
+
+  private Object lookUpVariable(Token name, Expr expr) {
+    Integer distance = locals.get(expr);
+    if (distance != null) {
+      return environment.getAt(distance, name.lexeme);
+    } else {
+      return globals.get(name);
+    }
   }
 
   private String makeTreeString(Object tree) {

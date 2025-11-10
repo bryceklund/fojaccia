@@ -6,47 +6,65 @@ import java.util.Map;
 import fojaccia.Fojaccia.LogLevel;
 
 public class Environment {
-    final Environment enclosing;
-    private final Map<String, Object> values = new HashMap<>();
+  final Environment enclosing;
+  private final Map<String, Object> values = new HashMap<>();
 
-    Environment() {
-        this.enclosing = null;
+  Environment() {
+    this.enclosing = null;
+  }
+
+  Environment(Environment enclosing) {
+    this.enclosing = enclosing;
+  }
+
+  void define(String name, Object value) {
+    Fojaccia.Log(LogLevel.DEBUG, "defining token with lexeme: " + name + ", value: " + value);
+    values.put(name, value);
+  }
+
+  void assign(Token name, Object value) {
+    Fojaccia.Log(LogLevel.DEBUG, "assigning token with lexeme: " + name.lexeme + ", value: " + value);
+
+    if (values.containsKey(name.lexeme)) {
+      values.put(name.lexeme, value);
+      return;
     }
 
-    Environment(Environment enclosing) {
-        this.enclosing = enclosing;
+    if (enclosing != null) {
+      enclosing.assign(name, value);
+      return;
     }
 
-    void define(String name, Object value) {
-        Fojaccia.Log(LogLevel.DEBUG, "defining token with lexeme: " + name + ", value: " + value);
-        values.put(name, value);
+    throw new RuntimeError(name, "Undefined variable: " + name.lexeme);
+  }
+
+  void assignAt(int distance, Token name, Object value) {
+    ancestor(distance).values.put(name.lexeme, value);
+  }
+
+  Object get(Token name) {
+    Fojaccia.Log(LogLevel.DEBUG, "getting token with lexeme: " + name.lexeme);
+    if (values.containsKey(name.lexeme)) {
+      return values.get(name.lexeme);
     }
 
-    void assign(Token name, Object value) {
-        Fojaccia.Log(LogLevel.DEBUG, "assigning token with lexeme: " + name.lexeme + ", value: " + value);
+    if (enclosing != null)
+      return enclosing.get(name);
 
-        if (values.containsKey(name.lexeme)) {
-            values.put(name.lexeme, value);
-            return;
-        }
+    throw new RuntimeError(name, "Undefined variable: " + name.lexeme);
+  }
 
-        if (enclosing != null) {
-            enclosing.assign(name, value);
-            return;
-        }
+  Object getAt(int distance, String name) {
+    return ancestor(distance).values.get(name);
+  }
 
-        throw new RuntimeError(name, "Undefined variable: " + name.lexeme);
+  Environment ancestor(int distance) {
+    Environment environment = this;
+    for (int i = 0; i < distance; i++) {
+      environment = environment.enclosing;
     }
 
-    Object get(Token name) {
-        Fojaccia.Log(LogLevel.DEBUG, "getting token with lexeme: " + name.lexeme);
-        if (values.containsKey(name.lexeme)) {
-            return values.get(name.lexeme);
-        }
+    return environment;
+  }
 
-        if (enclosing != null)
-            return enclosing.get(name);
-
-        throw new RuntimeError(name, "Undefined variable: " + name.lexeme);
-    }
 }

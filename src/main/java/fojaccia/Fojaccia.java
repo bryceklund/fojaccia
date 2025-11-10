@@ -127,6 +127,8 @@ public class Fojaccia {
     if (hadError)
       return;
     // System.out.println(new AstPrinter().print(expression));
+    Resolver resolver = new Resolver(interpreter);
+    resolver.resolve(statements);
     interpreter.interpret(statements);
   }
 
