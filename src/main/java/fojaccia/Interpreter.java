@@ -105,6 +105,43 @@ public class Interpreter implements
   }
 
   @Override
+  public Void visitClassStmt(Stmt.Class stmt) {
+    environment.define(stmt.name.lexeme, null);
+
+    Map<String, FojFunction> methods = new HashMap<>();
+    for (Stmt.Function method : stmt.methods) {
+      FojFunction function = new FojFunction(method, environment);
+      methods.put(method.name.lexeme, function);
+    }
+    FojClass fojClass = new FojClass(stmt.name.lexeme, methods);
+    environment.assign(stmt.name, fojClass);
+    return null;
+  }
+
+  @Override
+  public Object visitGet(Expr.Get expr) {
+    Object object = evaluate(expr.object);
+    if (object instanceof FojInstance) {
+      return ((FojInstance) object).get(expr.name);
+    }
+
+    throw new RuntimeError(expr.name, "Only instances have properties");
+  }
+
+  @Override
+  public Object visitSet(Expr.Set expr) {
+    Object object = evaluate(expr.object);
+
+    if (!(object instanceof FojInstance)) {
+      throw new RuntimeError(expr.name, "Only instances have fields");
+    }
+
+    Object value = evaluate(expr.value);
+    ((FojInstance) object).set(expr.name, value);
+    return value;
+  }
+
+  @Override
   public Object visitVariable(Expr.Variable expr) {
     return lookUpVariable(expr.name, expr);
   }

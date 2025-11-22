@@ -1,19 +1,32 @@
-This is an interpreter for the Java implementation of the Focaccia language (Fojaccia), by way of Robert Nystrom's Crafting Interpreters.
+This interpreter is the Java implementation of the Focaccia programming language (Fojaccia), by way of Robert Nystrom's Crafting Interpreters. This was created solely as an educational exercise. It is written in Java, parses with an AST, and has a relatively limited feature set. It's a silly language and it has a silly name. 
 
 ### Installation
 - Ensure you have Java 21 installed
 - Run the REPL:
 ```mvn exec:java -Dexec.mainClass="fojaccia.Fojaccia"```
-- Pass in a file:
+- Run a script:
 ```mvn exec:java -Dexec.mainClass="fojaccia.Fojaccia" -Dexec.args="<path/to/file.foj>"```
 
+### Examples
+Your first Fojaccia program:
+```print "hello world";```
 
-## Language Crap For Nerds
+Variable assignment:
+```var cat = "Rhubarb";```
 
-### Grammar
+Function delcaration:
+```
+fn printCatName(name) {
+  print name;
+}
+```
+### Language Crap For Nerds
+
+#### Grammar
 ```
 program         -> declaration* EOF ;
-declaration     -> fnDec | varDec | statement ;
+declaration     -> classDec | fnDec | varDec | statement ;
+classDec        -> "class" IDENTIFIER "{" function* "}" ;
 fnDec           -> "fn" function ;
 function        -> IDENTIFIER "(" parameters? ")" block ;
 parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
@@ -35,18 +48,18 @@ literal         -> NUMBER | STRING | "true" | "false" | "null" ;
 unary           -> ( "-" | "!" ) expression ;
 binary          -> expression operator expression ;
 grouping        -> "(" expression ")" ;
-call            -> primary ( "(" arguments? ")" )* ;
+call            -> primary ( "(" arguments? " | "." IDENTIFIER )" )* ;
 arguments       -> expression ( "," expression )* ;
 operator        ->   "=="  | "!=" | "<" | "<=" | ">" 
                    | ">="  | "+"  | "-" | "*"  | "/"
                    | "and" | "or" |"var" ;
 ```
-### Precedence
+#### Precedence
 ```
 declaration     -> statement
 statement       -> expression
 expression      -> assignment ;
-assignment      -> IDENTIFIER "=" assignment | equality | logic_or ;
+assignment      -> ( call "." )? IDENTIFIER "=" assignment | equality | logic_or ;
 logic_or        -> logic_and ( "or" logic_and )* ;
 logic_and       -> equality ( "and" equality )* ;
 equality        -> comparison ( ( "==" | "!=" ) comparison )* ;

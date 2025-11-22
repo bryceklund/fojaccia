@@ -9,9 +9,16 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   private final Interpreter interpreter;
   private final Stack<Map<String, Boolean>> scopes = new Stack<>();
+  private FunctionType currentFunction = FunctionType.NONE;
 
   Resolver(Interpreter interpreter) {
     this.interpreter = interpreter;
+  }
+
+  private enum FunctionType {
+    NONE,
+    FUNCTION,
+    METHOD
   }
 
   @Override
@@ -23,12 +30,30 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visitClassStmt(Stmt.Class stmt) {
+    declare(stmt.name);
+    define(stmt.name);
+
+    for (Stmt.Function method : stmt.methods) {
+      FunctionType declaration = FunctionType.METHOD;
+      resolveFunction(method, declaration);
+    }
+    return null;
+  }
+
+  @Override
   public Void visitVarStmt(Stmt.Var stmt) {
     declare(stmt.name);
     if (stmt.initializer != null) {
       resolve(stmt.initializer);
     }
     define(stmt.name);
+    return null;
+  }
+
+  @Override
+  public Void visitGet(Expr.Get expr) {
+    resolve(expr.object);
     return null;
   }
 
@@ -50,11 +75,18 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   }
 
   @Override
+  public Void visitSet(Expr.Set expr) {
+    resolve(expr.value);
+    resolve(expr.object);
+    return null;
+  }
+
+  @Override
   public Void visitFunctionStmt(Stmt.Function stmt) {
     declare(stmt.name);
     define(stmt.name);
 
-    resolveFunction(stmt);
+    resolveFunction(stmt, FunctionType.FUNCTION);
     return null;
   }
 
@@ -81,6 +113,9 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
 
   @Override
   public Void visitReturnStmt(Stmt.Return stmt) {
+    if (currentFunction == FunctionType.NONE) {
+      Fojaccia.Error(stmt.keyword, "Can't return from top-level code");
+    }
     if (stmt.value != null)
       resolve(stmt.value);
     return null;
@@ -145,7 +180,10 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     expression.accept(this);
   }
 
-  private void resolveFunction(Stmt.Function function) {
+  private void resolveFunction(Stmt.Function function, FunctionType type) {
+    FunctionType enclosingFunction = currentFunction;
+    currentFunction = type;
+
     beginScope();
     for (Token param : function.params) {
       declare(param);
@@ -153,6 +191,7 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
     }
     resolve(function.body);
     endScope();
+    currentFunction = enclosingFunction;
   }
 
   private void resolveLocal(Expr expr, Token name) {
@@ -167,7 +206,13 @@ public class Resolver implements Expr.Visitor<Void>, Stmt.Visitor<Void> {
   public void declare(Token name) {
     if (scopes.isEmpty())
       return;
-    scopes.peek().put(name.lexeme, false);
+
+    Map<String, Boolean> scope = scopes.peek();
+    if (scope.containsKey(name.lexeme)) {
+      Fojaccia.Error(name, "Variable name already exists in this scope");
+    }
+
+    scope.put(name.lexeme, false);
   }
 
   public void define(Token name) {

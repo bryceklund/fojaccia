@@ -31,6 +31,8 @@ public class Parser {
 
   private Stmt declaration() {
     try {
+      if (match(CLASS))
+        return classDeclaration();
       if (match(FN))
         return function("function");
       if (match(VAR))
@@ -40,6 +42,20 @@ public class Parser {
       synchronize();
       return null;
     }
+  }
+
+  private Stmt classDeclaration() {
+    Token name = consume(IDENTIFIER, "Class name expected");
+    consume(LEFT_BRACK, "`{` expected before class body");
+
+    List<Stmt.Function> methods = new ArrayList<>();
+    while (!check(RIGHT_BRACK) && !atEOF()) {
+      methods.add(function("method"));
+    }
+
+    consume(RIGHT_BRACK, "`}` expected after class body");
+
+    return new Stmt.Class(name, methods);
   }
 
   private Stmt varDeclaration() {
@@ -230,6 +246,9 @@ public class Parser {
       if (expr instanceof Expr.Variable) {
         Token name = ((Expr.Variable) expr).name;
         return new Expr.Assignment(name, value);
+      } else if (expr instanceof Expr.Get) {
+        Expr.Get get = (Expr.Get) expr;
+        return new Expr.Set(get.object, get.name, value);
       }
       error(equals, "Invalid token assignment");
     }
@@ -324,6 +343,9 @@ public class Parser {
     while (true) {
       if (match(LEFT_PAREN)) {
         expr = finishCall(expr);
+      } else if (match(DOT)) {
+        Token name = consume(IDENTIFIER, "Property name expected after `.`");
+        expr = new Expr.Get(expr, name);
       } else {
         break;
       }
