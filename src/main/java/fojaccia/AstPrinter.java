@@ -28,6 +28,26 @@ class AstPrinter implements Expr.Visitor<String> {
     }
 
     @Override
+    public String visitGet(Expr.Get get) {
+        return "";
+    }
+
+    @Override
+    public String visitSet(Expr.Set set) {
+        return "";
+    }
+
+    @Override
+    public String visitThis(Expr.This exp) {
+        return "";
+    }
+
+    @Override
+    public String visitSuper(Expr.Super exp) {
+        return "";
+    }
+
+    @Override
     public String visitVariable(Expr.Variable expr) {
         return "";
     }
@@ -52,6 +72,11 @@ class AstPrinter implements Expr.Visitor<String> {
     @Override
     public String visitUnary(Expr.Unary exp) {
         return parenthesize(exp.operator.lexeme, exp.right);
+    }
+
+    @Override
+    public String visitCall(Expr.Call exp) {
+        return "";
     }
 
     private String parenthesize(String name, Expr... expressions) {

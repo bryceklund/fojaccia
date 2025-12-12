@@ -9,10 +9,14 @@ This interpreter is the Java implementation of the Focaccia programming language
 
 ### Examples
 Your first Fojaccia program:
-```print "hello world";```
+```
+print "hello world";
+```
 
 Variable assignment:
-```var cat = "Rhubarb";```
+```
+var cat = "Rhubarb";
+```
 
 Function delcaration:
 ```
@@ -20,13 +24,22 @@ fn printCatName(name) {
   print name;
 }
 ```
+
+Classes and inheritance:
+```
+> class Doughnut { cook() { print "Fry until golden brown"; } }
+> class BostonCream < Doughnut {}
+> BostonCream().cook();
+Fry until golden brown
+> 
+```
 ### Language Crap For Nerds
 
 #### Grammar
 ```
 program         -> declaration* EOF ;
 declaration     -> classDec | fnDec | varDec | statement ;
-classDec        -> "class" IDENTIFIER "{" function* "}" ;
+classDec        -> "class" IDENTIFIER ( "<" IDENTIFIER )? "{" function* "}" ;
 fnDec           -> "fn" function ;
 function        -> IDENTIFIER "(" parameters? ")" block ;
 parameters      -> IDENTIFIER ( "," IDENTIFIER )* ;
@@ -48,7 +61,7 @@ literal         -> NUMBER | STRING | "true" | "false" | "null" ;
 unary           -> ( "-" | "!" ) expression ;
 binary          -> expression operator expression ;
 grouping        -> "(" expression ")" ;
-call            -> primary ( "(" arguments? " | "." IDENTIFIER )" )* ;
+call            -> primary ( "(" arguments? ")" | "." IDENTIFIER )* ;
 arguments       -> expression ( "," expression )* ;
 operator        ->   "=="  | "!=" | "<" | "<=" | ">" 
                    | ">="  | "+"  | "-" | "*"  | "/"
@@ -68,8 +81,8 @@ term            -> factor ( ( "-" | "+" ) factor )* ;
 factor          -> unary ( ( "/" | "*" ) unary )* ;
 unary           -> ( "!" | "-" ) unary 
                    | primary ;
-primary         -> NUMBER | STRING | "true" | "false" 
-                   | "null"
+primary         -> "true" | "false" | "null" | "this" 
+                   | NUMBER | STRING | IDENTIFIER
                    | "(" expression ")" 
-                   | IDENTIFIER ;
+                   | "super" "." IDENTIFIER ;
 ```

@@ -25,12 +25,40 @@ abstract class Expr {
 
     R visitAssignment(Assignment exp);
 
-    R visitGet(Get get);
+    R visitGet(Get exp);
 
-    R visitSet(Set set);
+    R visitSet(Set exp);
+
+    R visitThis(This exp);
+
+    R visitSuper(Super exp);
   }
 
   abstract <R> R accept(Visitor<R> visitor);
+
+  public static class Super extends Expr {
+    final Token keyword;
+    final Token method;
+
+    Super(Token keyword, Token method) {
+      this.keyword = keyword;
+      this.method = method;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) { return visitor.visitSuper(this); }
+  }
+
+  public static class This extends Expr {
+    final Token keyword;
+
+    This(Token keyword) {
+      this.keyword = keyword;
+    }
+
+    @Override
+    <R> R accept(Visitor<R> visitor) { return visitor.visitThis(this); }
+  }
 
   public static class Set extends Expr {
     final Expr object;

@@ -46,6 +46,13 @@ public class Parser {
 
   private Stmt classDeclaration() {
     Token name = consume(IDENTIFIER, "Class name expected");
+
+    Expr.Variable superclass = null;
+    if (match(LESS)) {
+      consume(IDENTIFIER, "Superclass name expected");
+      superclass = new Expr.Variable(previous());
+    }
+
     consume(LEFT_BRACK, "`{` expected before class body");
 
     List<Stmt.Function> methods = new ArrayList<>();
@@ -55,7 +62,7 @@ public class Parser {
 
     consume(RIGHT_BRACK, "`}` expected after class body");
 
-    return new Stmt.Class(name, methods);
+    return new Stmt.Class(name, superclass, methods);
   }
 
   private Stmt varDeclaration() {
@@ -385,12 +392,22 @@ public class Parser {
     if (match(NULL))
       return new Expr.Literal(null);
 
+    if (match(THIS))
+      return new Expr.This(previous());
+
     if (match(IDENTIFIER)) {
       return new Expr.Variable(previous());
     }
 
     if (match(NUMBER, STRING)) {
       return new Expr.Literal(previous().literal);
+    }
+
+    if (match(SUPER)) {
+      Token keyword = previous();
+      consume(DOT, "`.` expected after `super`");
+      Token method = consume(IDENTIFIER, "Superclass method name expected");
+      return new Expr.Super(keyword, method);
     }
 
     if (match(LEFT_PAREN)) {

@@ -7,10 +7,18 @@ import fojaccia.Fojaccia.LogLevel;
 public class FojFunction implements FojCallable {
   private final Stmt.Function declaration;
   private final Environment closure;
+  private final boolean isInitializer;
 
-  FojFunction(Stmt.Function declaration, Environment closure) {
+  FojFunction(Stmt.Function declaration, Environment closure, boolean isInitializer) {
     this.declaration = declaration;
     this.closure = closure;
+    this.isInitializer = isInitializer;
+  }
+
+  FojFunction bind(FojInstance instance) {
+    Environment environment = new Environment(closure);
+    environment.define("this", instance);
+    return new FojFunction(declaration, environment, isInitializer);
   }
 
   @Override
@@ -26,12 +34,15 @@ public class FojFunction implements FojCallable {
       environment.define(declaration.params.get(i).lexeme, arguments.get(i));
     }
 
-    Fojaccia.Log(LogLevel.DEBUG, "calling function: " + declaration.name + "with arguments: " + arguments.toString());
+    Fojaccia.Log(LogLevel.DEBUG, "calling function: " + declaration.name + " with arguments: " + arguments.toString());
     try {
       interpreter.executeBlock(declaration.body, environment);
     } catch (Return r) {
+      if (isInitializer) return closure.getAt(0, "this");
       return r.value;
     }
+
+    if (isInitializer) return closure.getAt(0, "this");
     return null;
   }
 
