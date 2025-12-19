@@ -1,4 +1,4 @@
-This interpreter is the Java implementation of the Focaccia programming language (Fojaccia), by way of Robert Nystrom's Crafting Interpreters. This was created solely as an educational exercise. It is written in Java, parses with an AST, and has a relatively limited feature set. It's a silly language and it has a silly name. 
+This interpreter is the Java implementation of the Focaccia programming language (Fojaccia), by way of Robert Nystrom's Crafting Interpreters. This was created solely as an educational exercise. It is written in Java, uses an AST-based recursive descent parser, and has a relatively limited feature set. It's a silly language and it has a silly name. 
 
 ### Installation
 - Ensure you have Java 21 installed
